@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <direct.h>  
+#include <direct.h>
+#include <time.h>
 
 struct Pasien {
     int  id;
@@ -31,6 +32,7 @@ float hitungBiaya(struct Dokter data_dokter, struct Diagnosa diagnosa);
 void  tampilkanData(struct Pasien data_pasien, struct Dokter data_dokter, struct Diagnosa diagnosa);
 void  cetakStruk(struct Pasien data_pasien, struct Dokter data_dokter, struct Diagnosa diagnosa);
 void  simpanData(struct Pasien data_pasien, struct Dokter data_dokter, struct Diagnosa diagnosa);
+void  simpanPDF();
 
 static void bersihkanLayar() {
 #ifdef _WIN32
@@ -56,10 +58,11 @@ int main() {
         printf("3. Input Data Diagnosa\n");
         printf("4. Tampilkan Semua Data\n");
         printf("5. Cetak Struk Pembayaran\n");
-        printf("6. Simpan ke File\n");
-        printf("7. Keluar\n");
+        printf("6. Simpan ke File TXT\n");
+        printf("7. Simpan ke File PDF\n");
+        printf("8. Keluar dari Sistem\n");
         printf("=============================================\n");
-        printf("Pilih menu (1-7): ");
+        printf("Pilih menu (1-8): ");
         scanf("%d", &pilihan);
         getchar();
 
@@ -83,6 +86,9 @@ int main() {
                 simpanData(data_pasien, data_dokter, diagnosa);
                 break;
             case 7:
+                simpanPDF();
+                break;
+            case 8:
                 printf("\nTerima kasih! Program selesai.\n");
                 return 0;
             default:
@@ -191,6 +197,11 @@ void tampilkanData(struct Pasien data_pasien, struct Dokter data_dokter, struct 
 
 void cetakStruk(struct Pasien data_pasien, struct Dokter data_dokter, struct Diagnosa diagnosa) {
     float total = hitungBiaya(data_dokter, diagnosa);
+
+    time_t now = time(NULL);
+    char waktuCetak[40];
+    strftime(waktuCetak, sizeof(waktuCetak), "%d/%m/%Y %H:%M:%S", localtime(&now));
+
     printf("\n=============================================\n");
     printf("         STRUK PEMBAYARAN RUMAH SAKIT\n");
     printf("=============================================\n");
@@ -209,6 +220,7 @@ void cetakStruk(struct Pasien data_pasien, struct Dokter data_dokter, struct Dia
     printf("TOTAL BIAYA   : Rp %10.2f\n", total);
     printf("=============================================\n");
     printf("     TERIMA KASIH ATAS KEPERCAYAAN ANDA\n");
+    printf("Dicetak pada  : %s\n", waktuCetak);
     printf("=============================================\n");
 }
 
@@ -216,13 +228,17 @@ void simpanData(struct Pasien data_pasien, struct Dokter data_dokter, struct Dia
     _mkdir("C:\\TTS_DDP");
 
     FILE *file = fopen("C:\\TTS_DDP\\data_rumahsakit_ddp.txt", "a");
-
     if (file == NULL) {
         printf("[ERROR] Gagal membuka file untuk menyimpan data!\n");
         return;
     }
 
     float total = hitungBiaya(data_dokter, diagnosa);
+
+    time_t now = time(NULL);
+    char waktuSimpan[40];
+    strftime(waktuSimpan, sizeof(waktuSimpan), "%d/%m/%Y %H:%M:%S", localtime(&now));
+
     fprintf(file, "=============================================\n");
     fprintf(file, "DATA PASIEN ID: %d\n", data_pasien.id);
     fprintf(file, "Nama: %s | Umur: %d | Alamat: %s\n", data_pasien.nama, data_pasien.umur, data_pasien.alamat);
@@ -231,9 +247,18 @@ void simpanData(struct Pasien data_pasien, struct Dokter data_dokter, struct Dia
     fprintf(file, "Tarif Dokter: Rp %.2f | Biaya Obat: Rp %.2f | Biaya Rawat: Rp %.2f\n",
             data_dokter.tarif, diagnosa.biaya_obat, diagnosa.biaya_rawat);
     fprintf(file, "TOTAL: Rp %.2f\n", total);
+    fprintf(file, "Tanggal & Waktu Simpan: %s\n", waktuSimpan);
     fprintf(file, "=============================================\n\n");
     fclose(file);
 
-    printf("\n[INFO] Data berhasil disimpan ke folder C:\\TTS_DDP\\data_rumahsakit_ddp.txt\n");
+    printf("\n[INFO] Data berhasil disimpan ke C:\\TTS_DDP\\data_rumahsakit_ddp.txt\n");
 }
 
+void simpanPDF() {
+    _mkdir("C:\\TTS_DDP");
+    system("powershell -command \""
+           "$txt='C:\\TTS_DDP\\data_rumahsakit_ddp.txt'; "
+           "$pdf='C:\\TTS_DDP\\data_rumahsakit_ddp.pdf'; "
+           "(Get-Content $txt) | Out-File -FilePath $pdf\"");
+    printf("\n[INFO] File PDF berhasil dibuat di C:\\TTS_DDP\\data_rumahsakit_ddp.pdf\n");
+}
