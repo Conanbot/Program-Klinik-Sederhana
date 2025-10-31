@@ -236,3 +236,4 @@ void simpanData(struct Pasien data_pasien, struct Dokter data_dokter, struct Dia
 
     printf("\n[INFO] Data berhasil disimpan ke folder C:\\TTS_DDP\\data_rumahsakit_ddp.txt\n");
 }
+
